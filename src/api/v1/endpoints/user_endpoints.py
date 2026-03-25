@@ -8,7 +8,7 @@ from src.schemas.user_schemas import (
     UserCreate, UserLogin, UserUpdate, AdminUserUpdate, 
     UserResponse
 )
-from src.utils.auth_utils import get_current_user, create_access_token
+from src.utils.auth_utils import get_current_user, create_access_token, create_refresh_token, RefreshTokenBearer
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -26,8 +26,20 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
     db_user = await service.authenticate_user(user.email, user.password)
     if not db_user or not db_user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    token = create_access_token({"sub": str(db_user.id), "tenant_id": str(db_user.tenant_id)})
-    return {"access_token": token, "token_type": "bearer"}
+    token = create_access_token(user_id=str(db_user.id), tenant_id=str(db_user.tenant_id))
+    refresh_token = create_refresh_token(user_id=str(db_user.id), tenant_id=str(db_user.tenant_id))
+    return {"access_token": token, "refresh_token": refresh_token, "token_type": "bearer"}
+
+
+# ---------------- REFRESH TOKEN ----------------
+@router.post("/refresh")
+async def refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
+    user_id = token_details.get("sub")
+    tenant_id = token_details.get("tenant_id")
+    if not user_id or not tenant_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    new_access_token = create_access_token(user_id=str(user_id), tenant_id=str(tenant_id))
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 # ---------------- GET ALL USERS (Tenant Scoped) ----------------
 @router.get("/", response_model=list[UserResponse])

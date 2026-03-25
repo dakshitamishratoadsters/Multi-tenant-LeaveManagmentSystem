@@ -1,4 +1,3 @@
-from pydantic import config
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from src.core.config import config
@@ -10,12 +9,12 @@ engine = create_async_engine(
     echo=True,
 )
 
-async_session_maker = sessionmaker(
+async_session= sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
 async def get_session():
-    async with async_session_maker() as session:
+    async with async_session() as session:
         yield session
