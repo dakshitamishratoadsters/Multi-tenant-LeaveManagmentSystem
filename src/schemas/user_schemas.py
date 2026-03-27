@@ -11,6 +11,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=4)
     tenant_id: uuid.UUID
+    invite_code: str
+    role: str = "employee"
 
 
 # ---------------- LOGIN ----------------
@@ -23,7 +25,7 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: str = Field(default=None,min_length=4)
+    password: Optional[str] = Field(default=None,min_length=4)
  
 
 
@@ -31,7 +33,7 @@ class UserUpdate(BaseModel):
 class AdminUserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: str = Field(default=None,min_length=4)
+    password: Optional[str] = Field(default=None,min_length=4)
     role: Optional[Literal["employee", "manager", "admin"]] = None
     is_active: Optional[bool] = None   #can deactivate the user  instead of deleting the user from the database
 

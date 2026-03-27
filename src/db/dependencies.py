@@ -1,9 +1,14 @@
-# src/db/dependencies.py
+from src.db.database import async_session
+from fastapi import Depends,HTTPException,status
+from src.utils.auth_utils import get_current_user
 
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.db.session import async_session
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session() as session:
-        yield session
+def require_role(*roles):
+    def role_checker(current_user=Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not Autorized"
+            ) 
+        return current_user
+    return role_checker       
+        
